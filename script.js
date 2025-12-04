@@ -98,8 +98,15 @@ $(document).ready(function() {
     });
 
     // Register mouse click on canvas
-    $(document).on("click", "canvas", function() {
-        if (isTaskRunning) {
+    // $(document).on("click", "canvas", function() {
+    //     if (isTaskRunning) {
+    //         onCanvasClick();
+    //     }
+    // });
+
+    $(document).on("keydown", function(event) {
+        if (isTaskRunning && event.code === "Space") {
+            event.preventDefault(); // Prevent default spacebar behavior
             onCanvasClick();
         }
     });
@@ -163,7 +170,7 @@ $(document).ready(function() {
                 return true;
             }
         });
-    
+
     // Load saved input values from cookies
     if (getCookie("webfitt-participant-code") != "") $("#participant-code").val(getCookie("webfitt-participant-code"));
     if (getCookie("webfitt-session-code") != "") $("#session-code").val(getCookie("webfitt-session-code"));
@@ -174,7 +181,7 @@ $(document).ready(function() {
     if (getCookie("webfitt-amplitude") != "") $("#amplitude").val(getCookie("webfitt-amplitude"));
     if (getCookie("webfitt-width") != "") $("#width").val(getCookie("webfitt-width"));
     if (getCookie("webfitt-number-of-targets") != "") $("#number-of-targets").val(getCookie("webfitt-number-of-targets"));
-    
+
     // Validate input and starting the task
     $(document).on("click", "#start-test-btn", function() {
         participantCode = $("#participant-code").val();
@@ -204,7 +211,7 @@ $(document).ready(function() {
         }
         var A = A_raw.replace(" ", '').split(",");
         var W = W_raw.replace(" ", '').split(",");
-        
+
         var correctFlag = true;
         var errorMsg = "";
 
@@ -306,7 +313,7 @@ function endCalibration() {
  * a_list: (Integer[]) List of amplitude values
  * w_list: (Integer[]) List of width values
  * n: (Integer) Number of targets
- * 
+ *
  */
 function beginApp(a_list, w_list, n) {
     taskIdx = 0;
@@ -367,7 +374,7 @@ function setup() {
         beginCalibration();
     }
 }
-  
+
 function draw() {
     background(255);
 
@@ -404,7 +411,7 @@ function renderCalibrationPanel() {
     textFont(robotoLightFont);
     textSize(32);
     text("Please adjust the slider below so that the card on your screen matches a physical credit card.", width / 2, 210);
-    
+
     let val = slider.value();
     slider.style('display', 'block');
 
@@ -448,24 +455,53 @@ function onCanvasClick() {
     var clickPos = new Pos(mouseX, mouseY);
 
     var correct = isClickCorrect(A, W, n, mainTarget, clickPos);
-    if (correct && !isMute) {
-        correctAudio.play();
-    }
-    else if (beginFlag && !isMute) {
-        incorrectAudio.play();
-    }
+    // if (correct && !isMute) {
+    //     correctAudio.play();
+    // }
+    // else if (beginFlag && !isMute) {
+    //     incorrectAudio.play();
+    // }
+    //
+    // if (correct && !beginFlag) {
+    //     beginFlag = true;
+    //     lastClickTime = millis();
+    //     currentClickTime = lastClickTime;
+    //     clickNumber++;
+    // }
+    // else if (beginFlag) {
+    //     currentClickTime = millis();
+    //     computeClickData(clickPos);
+    //     clickNumber++;
+    //     lastClickTime = currentClickTime;
+    // }
+    if (correct) {
+        if (!isMute) {
+            correctAudio.play();
+        }
 
-    if (correct && !beginFlag) {
-        beginFlag = true;
-        lastClickTime = millis();
-        currentClickTime = lastClickTime;
-        clickNumber++;
+        if (!beginFlag) {
+            beginFlag = true;
+            lastClickTime = millis();
+            currentClickTime = lastClickTime;
+            clickNumber++;
+        }
+        else {
+            currentClickTime = millis();
+            computeClickData(clickPos);
+            clickNumber++;
+            lastClickTime = currentClickTime;
+        }
     }
-    else if (beginFlag) {
-        currentClickTime = millis();
-        computeClickData(clickPos);
-        clickNumber++;
-        lastClickTime = currentClickTime;
+    else {
+        if (beginFlag && !isMute) {
+            incorrectAudio.play();
+        }
+        // Incorrect click - don't advance, just record error data
+        if (beginFlag) {
+            currentClickTime = millis();
+            computeClickData(clickPos);
+            lastClickTime = currentClickTime;
+        }
     }
 }
 
