@@ -13,6 +13,15 @@ class Pos {
     }
 }
 
+var testType = "fitts";
+
+var pasSquares = [];
+var pasCurrentTarget = 0;
+var pasSquareSize = 50;
+var pasNumSquares = 10;
+var pasClickData = [];
+var pasTasks = [];
+
 var tasks = [];
 var uncalibratedTasks = [];
 var taskIdx = 0;
@@ -187,12 +196,16 @@ $(document).ready(function() {
         participantCode = $("#participant-code").val();
         sessionCode = $("#session-code").val();
         conditionCode = $("#condition-code").val();
+
+        testType = $("#test-type").val();
+
         handDominance = $("input[name='hand-dominance']:checked").val();
         pointingDevice = $("input[name='pointing-device']:checked").val();
         deviceExperience = $("input[name='device-experience']:checked").val();
         var A_raw = $("#amplitude").val();
         var W_raw = $("#width").val();
         var n = parseInt($("#number-of-targets").val());
+        pasNumSquares = n;
 
         // Save Input Values to Cookie
         setCookie("webfitt-participant-code", participantCode, 3650);
@@ -316,35 +329,66 @@ function endCalibration() {
  *
  */
 function beginApp(a_list, w_list, n) {
-    taskIdx = 0;
-    clickNumber = 0;
-    clickData = [];
-    aggregateTaskResult = [];
-    overallMeanResult = [];
-    tasks = generateTaskSequence(a_list, w_list, n);
-    uncalibratedTasks = generateUncalibratedTaskSequence(a_list, w_list, n);
+    if (testType === "pas") {
+        // PAS test initialization with multiple parameters
+        pasTasks = [];
 
-    // Shuffling the array
-    for (var i = tasks.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = tasks[i];
-        tasks[i] = tasks[j];
-        tasks[j] = temp;
+        // Generate all combinations of amplitude and width
+        for (var i = 0; i < a_list.length; i++) {
+            for (var j = 0; j < w_list.length; j++) {
+                pasTasks.push({
+                    amplitude: a_list[i] * calibrationScale,
+                    width: w_list[j] * calibrationScale,
+                    numSquares: n
+                });
+            }
+        }
 
-        var temp = uncalibratedTasks[i];
-        uncalibratedTasks[i] = uncalibratedTasks[j];
-        uncalibratedTasks[j] = temp;
-    }
+        // Shuffle the task order
+        for (var i = pasTasks.length - 1; i > 0; i--) {
+            var k = Math.floor(Math.random() * (i + 1));
+            var temp = pasTasks[i];
+            pasTasks[i] = pasTasks[k];
+            pasTasks[k] = temp;
+        }
 
-
-    if (tasks.length == 0) {
-        alert("ERROR: No task to run.");
-    }
-    else {
+        pasSquares = generatePASSquares(pasTasks[0].numSquares, pasTasks[0].amplitude);
+        pasSquareSize = pasTasks[0].width;
+        pasCurrentTarget = 0;
+        pasClickData = [];
+        taskIdx = 0;
         isTaskRunning = true;
         $("#header_logo").show();
+    } else {
+        // Existing Fitts test code
+        taskIdx = 0;
+        clickNumber = 0;
+        clickData = [];
+        aggregateTaskResult = [];
+        overallMeanResult = [];
+        tasks = generateTaskSequence(a_list, w_list, n);
+        uncalibratedTasks = generateUncalibratedTaskSequence(a_list, w_list, n);
+
+        for (var i = tasks.length - 1; i > 0; i--) {
+            var j = Math.floor(Math.random() * (i + 1));
+            var temp = tasks[i];
+            tasks[i] = tasks[j];
+            tasks[j] = temp;
+
+            var temp = uncalibratedTasks[i];
+            uncalibratedTasks[i] = uncalibratedTasks[j];
+            uncalibratedTasks[j] = temp;
+        }
+
+        if (tasks.length == 0) {
+            alert("ERROR: No task to run.");
+        } else {
+            isTaskRunning = true;
+            $("#header_logo").show();
+        }
     }
 }
+
 
 function preload() {
     creditCardImg = loadImage("assets/credit_card.png");
@@ -382,9 +426,14 @@ function draw() {
         renderCalibrationPanel();
     }
     else if (isTaskRunning) {
-        renderTrail();
-        runPipeline();
-        renderInfoText();
+        if (testType === "pas") {
+            renderPASSquares();
+            renderPASInfo();
+        } else {
+            renderTrail();
+            runPipeline();
+            renderInfoText();
+        }
     }
     else if (isTaskFinished) {
         if (resultsview) {
@@ -1134,4 +1183,144 @@ function testing() {
     console.log(ide);
     console.log(meant);
     console.log(throughput);
+}
+
+function generatePASSquares(numSquares, amplitude) {
+    var squares = [];
+    var padding = 100;
+    var maxAttempts = 100;
+    var maxDistance = amplitude / 2;
+    var forbiddenZoneWidth = 150;  // Width of forbidden zone
+    var forbiddenZoneHeight = 150; // Height of forbidden zone
+
+    for (var i = 0; i < numSquares; i++) {
+        var pos;
+        var attempts = 0;
+
+        do {
+            pos = new Pos(
+                Math.random() * (width - padding * 2) + padding,
+                Math.random() * (height - padding * 2) + padding
+            );
+            attempts++;
+        } while ((hasSquareCollision(squares, pos, maxDistance) ||
+                 isInForbiddenZone(pos, forbiddenZoneWidth, forbiddenZoneHeight, pasSquareSize)) &&
+                 attempts < maxAttempts);
+
+        if (attempts < maxAttempts) {
+            squares.push({pos: pos, clicked: false, index: i});
+        }
+    }
+
+    return squares;
+}
+
+function hasSquareCollision(squares, newPos, maxDistance) {
+    var minDistance = maxDistance; // Use amplitude-controlled distance
+    for (var i = 0; i < squares.length; i++) {
+        var dist = sqrt(pow(squares[i].pos.x - newPos.x, 2) + pow(squares[i].pos.y - newPos.y, 2));
+        if (dist < minDistance) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function renderPASSquares() {
+    for (var i = 0; i < pasSquares.length; i++) {
+        var square = pasSquares[i];
+        var isCurrentTarget = (i === pasCurrentTarget);
+        var isClicked = square.clicked;
+
+        // Draw square
+        stroke(0);
+        strokeWeight(3);
+
+        if (isCurrentTarget) {
+            fill("#3D9970"); // Green for current target
+        } else if (isClicked) {
+            fill("#90EE90"); // Light green for clicked
+        } else {
+            fill(255); // White for unclicked
+        }
+
+        rect(square.pos.x - pasSquareSize / 2, square.pos.y - pasSquareSize / 2, pasSquareSize, pasSquareSize);
+
+        // Draw number
+        fill(0);
+        textSize(20);
+        textFont(robotoRegularFont);
+        textAlign(CENTER, CENTER);
+        text(i + 1, square.pos.x, square.pos.y);
+    }
+}
+
+function renderPASInfo() {
+    noStroke();
+    textSize(28);
+    fill(0);
+    textFont(robotoRegularFont);
+    textAlign(LEFT);
+    text("Task " + (taskIdx + 1) + " of " + pasTasks.length + " | Click squares in order: " + (pasCurrentTarget + 1) + " of " + pasNumSquares, width - 600, 50);
+    textFont(robotoLightFont);
+    text("Clicked: " + pasCurrentTarget + " | Remaining: " + (pasNumSquares - pasCurrentTarget), width - 600, 85);
+}
+
+$(document).on("keydown", function(event) {
+    if (event.code === "Space") {
+        event.preventDefault();
+        if (testType === "fitts" && isTaskRunning) {
+            onCanvasClick();
+        } else if (testType === "pas" && isTaskRunning) {
+            onPASClick();
+        }
+    }
+});
+
+function onPASClick() {
+    var clickPos = new Pos(mouseX, mouseY);
+    var currentSquare = pasSquares[pasCurrentTarget];
+    var squareLeft = currentSquare.pos.x - pasSquareSize / 2;
+    var squareRight = currentSquare.pos.x + pasSquareSize / 2;
+    var squareTop = currentSquare.pos.y - pasSquareSize / 2;
+    var squareBottom = currentSquare.pos.y + pasSquareSize / 2;
+
+    var isCorrect = (clickPos.x > squareLeft && clickPos.x < squareRight &&
+                     clickPos.y > squareTop && clickPos.y < squareBottom);
+
+    if (isCorrect) {
+        if (!isMute) {
+            correctAudio.play();
+        }
+        currentSquare.clicked = true;
+        pasCurrentTarget++;
+
+        if (pasCurrentTarget >= pasNumSquares) {
+            // Task complete, move to next task
+            taskIdx++;
+            if (taskIdx >= pasTasks.length) {
+                // All tasks complete
+                isTaskRunning = false;
+                isTaskFinished = true;
+                computeAggregateTaskResult();
+                computeOverallMeanResult();
+            } else {
+                // Initialize next task
+                pasSquares = generatePASSquares(pasTasks[taskIdx].numSquares, pasTasks[taskIdx].amplitude);
+                pasSquareSize = pasTasks[taskIdx].width;
+                pasCurrentTarget = 0;
+                pasNumSquares = pasTasks[taskIdx].numSquares;
+            }
+        }
+    } else {
+        if (!isMute) {
+            incorrectAudio.play();
+        }
+    }
+}
+
+function isInForbiddenZone(pos, zoneWidth, zoneHeight, squareSize) {
+    // Check if square would overlap with top-left forbidden zone (header logo area)
+    var squareRadius = squareSize / 2;
+    return (pos.x - squareRadius < zoneWidth && pos.y - squareRadius < zoneHeight);
 }
