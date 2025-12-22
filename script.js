@@ -41,7 +41,7 @@ let calibrationSlider;
 var participantCode = "";
 var sessionCode = "";
 var conditionCode = "";
-var handDominance = "";
+var eyeDominance = "";
 var pointingDevice = "";
 var deviceExperience = "";
 
@@ -54,9 +54,10 @@ var overallMeanResult = [];
 var servdown = false;
 var resultsview = true;
 
-let clickDataHeader = ["Participant Code", "Session Code", "Condition Code", "Hand Dominance", "Pointing Device", "Device Experience", "Amplitude", "Width", "Number of Targets", "Task Index", "Click Number", "Completion Time (ms)", "Source X", "Source Y", "Target X", "Target Y", "Click X", "Click Y", "Source-Target Distance", "dx", "Incorrect"];
-let aggregateTaskResultHeader = ["Participant Code", "Session Code", "Condition Code", "Hand Dominance", "Pointing Device", "Device Experience", "Amplitude", "Width", "Number of Targets", "Task Index", "Mean Completion Time (ms)", "Error (%)", "SDx", "We", "IDe", "Ae", "Throughput (bps)"];
-let overallMeanResultHeader = ["Participant Code", "Session Code", "Condition Code", "Hand Dominance", "Pointing Device", "Device Experience", "Mean Completion Time (ms)", "Mean Click Error (%)", "Mean Throughput (bps)"];
+let clickDataHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Device Experience", "Amplitude", "Width", "Number of Targets", "Task Index", "Click Number", "Completion Time (ms)", "Source X", "Source Y", "Target X", "Target Y", "Click X", "Click Y", "Source-Target Distance", "dx", "Incorrect"];
+let aggregateTaskResultHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Device Experience", "Amplitude", "Width", "Number of Targets", "Task Index", "Mean Completion Time (ms)", "Error (%)", "SDx", "We", "IDe", "Ae", "Throughput (bps)"];
+let overallMeanResultHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Device Experience", "Mean Completion Time (ms)", "Mean Click Error (%)", "Mean Throughput (bps)"];
+let PASDataHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Device Experience", "Amplitude", "Width", "Number of Targets", "Task Index", "Click Number", "Completion Time (ms)", "Square X", "Square Y", "Click X", "Click Y", "Distance to Square Center", "Incorrect"];
 
 $(document).ready(function() {
     $("#main_menu").hide();
@@ -184,7 +185,7 @@ $(document).ready(function() {
     if (getCookie("webfitt-participant-code") != "") $("#participant-code").val(getCookie("webfitt-participant-code"));
     if (getCookie("webfitt-session-code") != "") $("#session-code").val(getCookie("webfitt-session-code"));
     if (getCookie("webfitt-condition-code") != "") $("#condition-code").val(getCookie("webfitt-condition-code"));
-    if (getCookie("webfitt-hand-dominance") != "") $("input[name='hand-dominance'][value='" + getCookie("webfitt-hand-dominance") + "']").prop("checked", true);
+    if (getCookie("webfitt-eye-dominance") != "") $("input[name='eye-dominance'][value='" + getCookie("webfitt-eye-dominance") + "']").prop("checked", true);
     if (getCookie("webfitt-pointing-device") != "") $("input[name='pointing-device'][value='" + getCookie("webfitt-pointing-device") + "']").prop("checked", true);
     if (getCookie("webfitt-device-experience") != "") $("input[name='device-experience'][value='" + getCookie("webfitt-device-experience") + "']").prop("checked", true);
     if (getCookie("webfitt-amplitude") != "") $("#amplitude").val(getCookie("webfitt-amplitude"));
@@ -199,7 +200,7 @@ $(document).ready(function() {
 
         testType = $("#test-type").val();
 
-        handDominance = $("input[name='hand-dominance']:checked").val();
+        eyeDominance = $("input[name='eye-dominance']:checked").val();
         pointingDevice = $("input[name='pointing-device']:checked").val();
         deviceExperience = $("input[name='device-experience']:checked").val();
         var A_raw = $("#amplitude").val();
@@ -211,7 +212,7 @@ $(document).ready(function() {
         setCookie("webfitt-participant-code", participantCode, 3650);
         setCookie("webfitt-session-code", sessionCode, 3650);
         setCookie("webfitt-condition-code", conditionCode, 3650);
-        setCookie("webfitt-hand-dominance", handDominance, 3650);
+        setCookie("webfitt-eye-dominance", eyeDominance, 3650);
         setCookie("webfitt-pointing-device", pointingDevice, 3650);
         setCookie("webfitt-device-experience", deviceExperience, 3650);
         setCookie("webfitt-amplitude", A_raw, 3650);
@@ -277,6 +278,9 @@ $(document).ready(function() {
             $("#main_menu").hide();
 
             // Begin App
+            console.log("Tasks:", tasks);
+            console.log("Task Index:", taskIdx);
+
             beginApp(A, W, n);
         }
         else {
@@ -329,7 +333,12 @@ function endCalibration() {
  *
  */
 function beginApp(a_list, w_list, n) {
+    console.log("Amplitude List:", a_list);
+    console.log("Width List:", w_list);
+    console.log("Number of Targets:", n);
     if (testType === "pas") {
+        console.log("Beginning PAS Test");
+
         // PAS test initialization with multiple parameters
         pasTasks = [];
 
@@ -357,6 +366,7 @@ function beginApp(a_list, w_list, n) {
         pasCurrentTarget = 0;
         pasClickData = [];
         taskIdx = 0;
+        lastClickTime = millis();
         isTaskRunning = true;
         $("#header_logo").show();
     } else {
@@ -497,6 +507,8 @@ function runPipeline() {
 }
 
 function onCanvasClick() {
+    if (testType === "pas") return;
+
     var A = tasks[taskIdx].A;
     var W = tasks[taskIdx].W;
     var n = tasks[taskIdx].n;
@@ -585,6 +597,7 @@ function generateTaskSequence(a_list, w_list, n) {
         }
     }
 
+    console.log("Generated Task Sequence:", taskSequence); // Debugging
     return taskSequence;
 }
 
@@ -668,23 +681,27 @@ function renderInfoText() {
 function renderTaskCompleteMessage() {
     background(255);
 
-    noStroke();
-    textSize(28);
-    fill(0);
-    textFont(robotoRegularFont);
-    textAlign(LEFT);
-    text("Overall Mean Result", width - 400, 50);
-    textFont(robotoLightFont);
-    text("Mean Time (ms): " + Math.round(overallMeanResult[0][6] * 100) / 100, width - 400, 85);
-    text("Mean Error (%): " + Math.round(overallMeanResult[0][7] * 100) / 100, width - 400, 120);
-    text("Mean Throughput (bps): " + Math.round(overallMeanResult[0][8] * 100) / 100, width - 400, 155);
+    if (testType === "fitts" && overallMeanResult.length > 0) {
+        noStroke();
+        textSize(28);
+        fill(0);
+        textFont(robotoRegularFont);
+        textAlign(LEFT);
+        text("Overall Mean Result", width - 400, 50);
+        textFont(robotoLightFont);
+        text("Mean Time (ms): " + Math.round(overallMeanResult[0][7] * 100) / 100, width - 400, 85);
+        text("Mean Error (%): " + Math.round(overallMeanResult[0][8] * 100) / 100, width - 400, 120);
+        text("Mean Throughput (bps): " + Math.round(overallMeanResult[0][9] * 100) / 100, width - 400, 155);
+    }
 
     noStroke();
     textSize(64);
     fill(0);
     textFont(robotoLightFont);
     textAlign(CENTER, CENTER);
-    if (tasks.length == 1) {
+
+    let totalTasks = (testType === "pas") ? pasTasks.length : tasks.length;
+    if (totalTasks == 1) {
         text("Task Complete!", width / 2, height / 2);
     }
     else {
@@ -722,7 +739,8 @@ function computeClickData(clickPos) {
     data.push(participantCode);
     data.push(sessionCode);
     data.push(conditionCode);
-    data.push(handDominance);
+    data.push(testType);
+    data.push(eyeDominance);
     data.push(pointingDevice);
     data.push(deviceExperience);
     data.push(A);
@@ -772,7 +790,8 @@ function computeAggregateTaskResult() {
         aggRes.push(participantCode);
         aggRes.push(sessionCode);
         aggRes.push(conditionCode);
-        aggRes.push(handDominance);
+        aggRes.push(testType);
+        aggRes.push(eyeDominance);
         aggRes.push(pointingDevice);
         aggRes.push(deviceExperience);
         aggRes.push(A);
@@ -809,7 +828,8 @@ function computeOverallMeanResult() {
     ovRes.push(participantCode);
     ovRes.push(sessionCode);
     ovRes.push(conditionCode);
-    ovRes.push(handDominance);
+    ovRes.push(testType);
+    ovRes.push(eyeDominance);
     ovRes.push(pointingDevice);
     ovRes.push(deviceExperience);
     ovRes.push(overallMeanTime);
@@ -846,8 +866,20 @@ function generateMeanResultString(){
     return resultString;
 }
 
+function generatePASClickResultString() {
+    var resultString = PASDataHeader.join(",") + "\n";
+    for (var i = 0; i < pasClickData.length; i++) {
+        resultString += pasClickData[i].join(",") + "\n";
+    }
+    return resultString;
+}
+
 // Concatenates all the result arrays into a string and returns it
 function generateResultString() {
+    if (testType === "pas"){
+        return generatePASClickResultString();
+    }
+
     var resultString = "";
     resultString = clickDataHeader.join(",") + "\n";
     for (var i = 0; i < clickData.length; i++) {
@@ -868,7 +900,12 @@ function generateResultString() {
 
 // Uploads result string to the server
 function uploadResult() {
-    var clickResult = generateClickResultString();
+
+    if (testType === "pas"){
+        var clickResult = generatePASClickResultString();
+    } else{
+        var clickResult = generateClickResultString();
+    }
     var taskResult = generateTaskResultString();
     var meanResult = generateMeanResultString();
 
@@ -1082,9 +1119,13 @@ function postRequest(url, data, callback) {
 // Function to save results as a zip file
 function saveAsZipFile(filename) {
 	var zip = new JSZip();
-	zip.file(filename + "_click.csv", generateClickResultString());
-	zip.file(filename + "_task.csv", generateTaskResultString());
-	zip.file(filename + "_overall.csv", generateMeanResultString());
+    if (testType === "pas"){
+        zip.file(filename + "_pas_clicks.csv", generatePASClickResultString());
+    } else{
+        zip.file(filename + "_click.csv", generateClickResultString());
+        zip.file(filename + "_task.csv", generateTaskResultString());
+        zip.file(filename + "_overall.csv", generateMeanResultString());
+    }
 	// zip.generateAsync({type:"base64"}).then(function (content) {
 		 // location.href="data:application/zip;base64," + content;
 	// });
@@ -1188,8 +1229,8 @@ function testing() {
 function generatePASSquares(numSquares, amplitude) {
     var squares = [];
     var padding = 100;
-    var maxAttempts = 100;
-    var maxDistance = amplitude / 2;
+    var maxAttempts = 250;
+    //var maxDistance = amplitude / 2;
     var forbiddenZoneWidth = 150;  // Width of forbidden zone
     var forbiddenZoneHeight = 150; // Height of forbidden zone
 
@@ -1203,7 +1244,7 @@ function generatePASSquares(numSquares, amplitude) {
                 Math.random() * (height - padding * 2) + padding
             );
             attempts++;
-        } while ((hasSquareCollision(squares, pos, maxDistance) ||
+        } while ((hasSquareCollision(squares, pos, amplitude) ||
                  isInForbiddenZone(pos, forbiddenZoneWidth, forbiddenZoneHeight, pasSquareSize)) &&
                  attempts < maxAttempts);
 
@@ -1212,14 +1253,16 @@ function generatePASSquares(numSquares, amplitude) {
         }
     }
 
+    console.log(squares);
     return squares;
 }
 
-function hasSquareCollision(squares, newPos, maxDistance) {
-    var minDistance = maxDistance; // Use amplitude-controlled distance
+function hasSquareCollision(squares, newPos, amplitude) {
+    var minAllowedDistance = Math.max(amplitude, pasSquareSize * 1.5);
+
     for (var i = 0; i < squares.length; i++) {
         var dist = sqrt(pow(squares[i].pos.x - newPos.x, 2) + pow(squares[i].pos.y - newPos.y, 2));
-        if (dist < minDistance) {
+        if (dist < minAllowedDistance) {
             return true;
         }
     }
@@ -1288,6 +1331,31 @@ function onPASClick() {
     var isCorrect = (clickPos.x > squareLeft && clickPos.x < squareRight &&
                      clickPos.y > squareTop && clickPos.y < squareBottom);
 
+    var clickTime = millis() - lastClickTime;
+    lastClickTime = millis();
+
+    var data = [];
+    data.push(participantCode);
+    data.push(sessionCode);
+    data.push(conditionCode);
+    data.push(testType);
+    data.push(eyeDominance);
+    data.push(pointingDevice);
+    data.push(deviceExperience);
+    data.push(pasTasks[taskIdx].amplitude);
+    data.push(pasTasks[taskIdx].width);
+    data.push(pasTasks[taskIdx].numSquares);
+    data.push(taskIdx);
+    data.push(pasCurrentTarget + 1); // Click number
+    data.push(clickTime);
+    data.push(currentSquare.pos.x);
+    data.push(currentSquare.pos.y);
+    data.push(clickPos.x);
+    data.push(clickPos.y);
+    data.push(isCorrect ? 0 : 1); // Incorrect flag
+
+    pasClickData.push(data);
+
     if (isCorrect) {
         if (!isMute) {
             correctAudio.play();
@@ -1302,14 +1370,19 @@ function onPASClick() {
                 // All tasks complete
                 isTaskRunning = false;
                 isTaskFinished = true;
-                computeAggregateTaskResult();
-                computeOverallMeanResult();
+
+                var filename = "WebPAS_" + participantCode + "_" + sessionCode + "_" + conditionCode + "_" + pointingDevice;
+                saveAsZipFile(filename);
+                if (servdown) {
+                    uploadResult();
+                }
             } else {
                 // Initialize next task
                 pasSquares = generatePASSquares(pasTasks[taskIdx].numSquares, pasTasks[taskIdx].amplitude);
                 pasSquareSize = pasTasks[taskIdx].width;
                 pasCurrentTarget = 0;
                 pasNumSquares = pasTasks[taskIdx].numSquares;
+                lastClickTime = millis();
             }
         }
     } else {
