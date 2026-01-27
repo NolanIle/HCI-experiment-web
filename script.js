@@ -333,9 +333,9 @@ function endCalibration() {
  *
  */
 function beginApp(a_list, w_list, n) {
-    console.log("Amplitude List:", a_list);
-    console.log("Width List:", w_list);
-    console.log("Number of Targets:", n);
+    // console.log("Amplitude List:", a_list);
+    // console.log("Width List:", w_list);
+    // console.log("Number of Targets:", n);
     if (testType === "pas") {
         console.log("Beginning PAS Test");
 
@@ -361,8 +361,9 @@ function beginApp(a_list, w_list, n) {
             pasTasks[k] = temp;
         }
 
-        pasSquares = generatePASSquares(pasTasks[0].numSquares, pasTasks[0].amplitude);
         pasSquareSize = pasTasks[0].width;
+        pasSquares = generatePASSquares(pasTasks[taskIdx].numSquares, pasTasks[taskIdx].amplitude, pasSquareSize);
+        pasNumSquares = pasSquares.length;
         pasCurrentTarget = 0;
         pasClickData = [];
         taskIdx = 0;
@@ -496,7 +497,7 @@ function runPipeline() {
             computeAggregateTaskResult();
             computeOverallMeanResult();
             var filename = "WebFitts_" + participantCode + "_" + sessionCode + "_" + conditionCode + "_" + pointingDevice;
-			saveAsZipFile(filename);
+            saveAsZipFile(filename);
             if (servdown) {
                 uploadResult();
             }
@@ -573,10 +574,10 @@ function onCanvasClick() {
  * a_list: (Integer[]) List of amplitude values
  * w_list: (Integer[]) List of width values
  * n: (Integer) Number of targets
- * 
+ *
  * Returns
  * (Task[]) Randomized sequence of tasks
- * 
+ *
  */
 function generateTaskSequence(a_list, w_list, n) {
     // Calibrating amplitude and width values
@@ -615,17 +616,17 @@ function generateUncalibratedTaskSequence(a_list, w_list, n) {
 
 /*
  * Checks if the correct target is clicked.
- * 
+ *
  * Parameters
  * A: (Integer) Amplitude, defined as the distance between the centers of the screen and each target
  * W: (Integer) Width (radius) of the targets
  * n: (Integer) Number of targets
  * mainTarget: (Integer) Index of the main target
  * clickPos: (Pos) Position of the mouse click
- * 
+ *
  * Returns
  * (Boolean) True if the correct target is clicked, false otherwise
- * 
+ *
  */
 function isClickCorrect(A, W, n, mainTarget, clickPos) {
     var pos = getTargetPosition(A, n, mainTarget);
@@ -719,7 +720,7 @@ function renderTaskCompleteMessage() {
  *
  * Parameters
  * clickPos: (Pos) Coordinate of the mouse click
- * 
+ *
  */
 function computeClickData(clickPos) {
     var A = uncalibratedTasks[taskIdx].A;
@@ -823,7 +824,7 @@ function computeOverallMeanResult() {
     var overallMeanTime = computeMean(meanTimes);
     var overallMeanError = computeMean(errors);
     var overallMeanThroughput = computeMean(throughputs);
-    
+
     var ovRes = [];
     ovRes.push(participantCode);
     ovRes.push(sessionCode);
@@ -925,7 +926,7 @@ function uploadResult() {
  * W: (Integer) Width (radius) of the targets
  * n: (Integer) Number of targets
  * mainTarget: (Integer) Index of the main target
- * 
+ *
  */
 function renderTargets(A, W, n, mainTarget) {
     // Clearing circle inner area
@@ -955,10 +956,10 @@ function renderTargets(A, W, n, mainTarget) {
  * Parameters
  * c: (Integer) Click number
  * n: (Integer) Number of targets
- * 
+ *
  * Returns
  * (Integer) Index of the next target
- * 
+ *
  */
 function getTargetIdxFromClickNumber(c, n) {
     var marker1 = -1;
@@ -991,10 +992,10 @@ function getTargetIdxFromClickNumber(c, n) {
  * A: (Integer) Amplitude, defined as the distance between the centers of the screen and each target
  * n: (Integer) Number of targets
  * idx: (Integer) Index of the target
- * 
+ *
  * Returns
  * (Pos) Position of the target
- * 
+ *
  */
 function getTargetPosition(A, n, idx){
     var thetaX = 360 / n;
@@ -1019,7 +1020,7 @@ function renderVolumeImage(isHovering) {
         else {
             $("#volume_icon").attr("src", "assets/volume_on_hover.png");
         }
-    } 
+    }
     else {
         if (isMute) {
             $("#volume_icon").attr("src", "assets/volume_mute_default.png");
@@ -1039,7 +1040,7 @@ function renderTrailImage(isHovering) {
         else {
             $("#trail_icon").attr("src", "assets/trail_off_hover.png");
         }
-    } 
+    }
     else {
         if (isTrailing) {
             $("#trail_icon").attr("src", "assets/trail_on_default.png");
@@ -1107,7 +1108,7 @@ function randInt(min, max) {
 // Performs a post request to the given url and calls the callback function upon success
 function postRequest(url, data, callback) {
     var request = new XMLHttpRequest();
-    request.onreadystatechange = function() { 
+    request.onreadystatechange = function() {
         if (request.readyState == 4 && request.status == 200)
             callback(request.responseText);
     }
@@ -1118,7 +1119,7 @@ function postRequest(url, data, callback) {
 
 // Function to save results as a zip file
 function saveAsZipFile(filename) {
-	var zip = new JSZip();
+    var zip = new JSZip();
     if (testType === "pas"){
         zip.file(filename + "_pas_clicks.csv", generatePASClickResultString());
     } else{
@@ -1126,12 +1127,12 @@ function saveAsZipFile(filename) {
         zip.file(filename + "_task.csv", generateTaskResultString());
         zip.file(filename + "_overall.csv", generateMeanResultString());
     }
-	// zip.generateAsync({type:"base64"}).then(function (content) {
-		 // location.href="data:application/zip;base64," + content;
-	// });
-	zip.generateAsync({type:"blob"}).then(function (content) {
-		 saveAs(content, filename + ".zip"); // FileSaver.js Library Function
-	});
+    // zip.generateAsync({type:"base64"}).then(function (content) {
+    // location.href="data:application/zip;base64," + content;
+    // });
+    zip.generateAsync({type:"blob"}).then(function (content) {
+        saveAs(content, filename + ".zip"); // FileSaver.js Library Function
+    });
 }
 
 // Checks if all elements in the array are numbers
@@ -1226,39 +1227,96 @@ function testing() {
     console.log(throughput);
 }
 
-function generatePASSquares(numSquares, amplitude) {
+function generatePASSquares(numSquares, amplitude, squareSize) {
     var squares = [];
-    var padding = 100;
+    var padding = (squareSize / 2) + 20;
     var maxAttempts = 250;
-    //var maxDistance = amplitude / 2;
-    var forbiddenZoneWidth = 150;  // Width of forbidden zone
-    var forbiddenZoneHeight = 150; // Height of forbidden zone
+    var forbiddenZoneWidth = 150;
+    var forbiddenZoneHeight = 150;
 
     for (var i = 0; i < numSquares; i++) {
         var pos;
         var attempts = 0;
+        var validPosition = false;
 
-        do {
-            pos = new Pos(
-                Math.random() * (width - padding * 2) + padding,
-                Math.random() * (height - padding * 2) + padding
-            );
+        while (!validPosition && attempts < maxAttempts) {
+            if (i === 0 || squares.length === 0) {
+                // First square: place randomly on screen, leaving room for subsequent squares
+                var minX = padding + amplitude;
+                var maxX = width - padding - amplitude;
+                var minY = padding + amplitude;
+                var maxY = height - padding - amplitude;
+
+                if (maxX < minX || maxY < minY) {
+                    // If screen is too small for amplitude, use smaller margins
+                    minX = padding;
+                    maxX = width - padding;
+                    minY = padding;
+                    maxY = height - padding;
+                }
+
+                pos = new Pos(
+                    Math.random() * (maxX - minX) + minX,
+                    Math.random() * (maxY - minY) + minY
+                );
+            } else {
+                // Subsequent squares: place at amplitude distance from previous square
+                var prevSquare = squares[squares.length - 1];
+                var angle = Math.random() * 2 * Math.PI; // Random direction
+
+                // Calculate position at amplitude distance from previous square
+                var newX = prevSquare.pos.x + Math.cos(angle) * amplitude;
+                var newY = prevSquare.pos.y + Math.sin(angle) * amplitude;
+
+                // Check if position would be out of bounds
+                if (newX < padding || newX > width - padding ||
+                    newY < padding || newY > height - padding) {
+                    // Try next random angle instead of using this position
+                    attempts++;
+                    continue;
+                }
+
+                pos = new Pos(newX, newY);
+            }
+
+            // Check if position is valid (no collisions and not in forbidden zone)
+            if (!hasSquareCollision(squares, pos, squareSize) &&
+                !isInForbiddenZone(pos, forbiddenZoneWidth, forbiddenZoneHeight, squareSize)) {
+                validPosition = true;
+            }
+
             attempts++;
-        } while ((hasSquareCollision(squares, pos, amplitude) ||
-                 isInForbiddenZone(pos, forbiddenZoneWidth, forbiddenZoneHeight, pasSquareSize)) &&
-                 attempts < maxAttempts);
+        }
 
-        if (attempts < maxAttempts) {
+        if (validPosition) {
             squares.push({pos: pos, clicked: false, index: i});
+        } else {
+            // Fallback: try random placement
+            console.warn("Could not place square " + (i + 1) + " at amplitude distance, using fallback");
+            var fallbackAttempts = 0;
+            while (fallbackAttempts < 50) {
+                pos = new Pos(
+                    Math.random() * (width - 2 * padding) + padding,
+                    Math.random() * (height - 2 * padding) + padding
+                );
+
+                if (!hasSquareCollision(squares, pos, squareSize) &&
+                    !isInForbiddenZone(pos, forbiddenZoneWidth, forbiddenZoneHeight, squareSize)) {
+                    squares.push({pos: pos, clicked: false, index: i});
+                    break;
+                }
+                fallbackAttempts++;
+            }
         }
     }
 
-    console.log(squares);
+    console.log("Generated " + squares.length + " out of " + numSquares + " requested squares");
     return squares;
 }
 
-function hasSquareCollision(squares, newPos, amplitude) {
-    var minAllowedDistance = Math.max(amplitude, pasSquareSize * 1.5);
+function hasSquareCollision(squares, newPos, squareSize) {
+    // Ensure squares don't overlap
+    var minAllowedDistance = squareSize * 1.2; // Small buffer to prevent overlap
 
     for (var i = 0; i < squares.length; i++) {
         var dist = sqrt(pow(squares[i].pos.x - newPos.x, 2) + pow(squares[i].pos.y - newPos.y, 2));
@@ -1329,7 +1387,11 @@ function onPASClick() {
     var squareBottom = currentSquare.pos.y + pasSquareSize / 2;
 
     var isCorrect = (clickPos.x > squareLeft && clickPos.x < squareRight &&
-                     clickPos.y > squareTop && clickPos.y < squareBottom);
+        clickPos.y > squareTop && clickPos.y < squareBottom);
+
+    if (isCorrect && pasCurrentTarget === 0) {
+        lastClickTime = millis();
+    }
 
     var clickTime = millis() - lastClickTime;
     lastClickTime = millis();
@@ -1378,10 +1440,13 @@ function onPASClick() {
                 }
             } else {
                 // Initialize next task
-                pasSquares = generatePASSquares(pasTasks[taskIdx].numSquares, pasTasks[taskIdx].amplitude);
                 pasSquareSize = pasTasks[taskIdx].width;
+                pasSquares = generatePASSquares(pasTasks[taskIdx].numSquares, pasTasks[taskIdx].amplitude, pasSquareSize);
+
+                pasNumSquares = pasSquares.length;
+
                 pasCurrentTarget = 0;
-                pasNumSquares = pasTasks[taskIdx].numSquares;
+                // pasNumSquares = pasTasks[taskIdx].numSquares;
                 lastClickTime = millis();
             }
         }
