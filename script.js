@@ -1352,12 +1352,13 @@ function renderPASSquares() {
 function renderPASInfo() {
     noStroke();
     textSize(28);
-    fill(0);
+    fill(0, 0, 0, 100); // Added transparency (alpha = 100 out of 255)
     textFont(robotoRegularFont);
     textAlign(LEFT);
     text("Task " + (taskIdx + 1) + " of " + pasTasks.length + " | Click squares in order: " + (pasCurrentTarget + 1) + " of " + pasNumSquares, width - 600, 50);
     textFont(robotoLightFont);
-    text("Clicked: " + pasCurrentTarget + " | Remaining: " + (pasNumSquares - pasCurrentTarget), width - 600, 85);
+    text("Amplitude " + pasTasks[taskIdx].amplitude + " | Width " + pasTasks[taskIdx].width, width - 600, 85);
+    text("Clicked: " + pasCurrentTarget + " | Remaining: " + (pasNumSquares - pasCurrentTarget), width - 600, 120);
 }
 
 $(document).on("keydown", function(event) {
