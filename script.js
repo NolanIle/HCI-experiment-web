@@ -43,7 +43,6 @@ var sessionCode = "";
 var conditionCode = "";
 var eyeDominance = "";
 var pointingDevice = "";
-var deviceExperience = "";
 
 var lastClickTime = 0;
 var currentClickTime = 0;
@@ -54,10 +53,10 @@ var overallMeanResult = [];
 var servdown = false;
 var resultsview = true;
 
-let clickDataHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Device Experience", "Amplitude", "Width", "Number of Targets", "Task Index", "Click Number", "Completion Time (ms)", "Source X", "Source Y", "Target X", "Target Y", "Click X", "Click Y", "Source-Target Distance", "dx", "Incorrect"];
-let aggregateTaskResultHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Device Experience", "Amplitude", "Width", "Number of Targets", "Task Index", "Mean Completion Time (ms)", "Error (%)", "SDx", "We", "IDe", "Ae", "Throughput (bps)"];
-let overallMeanResultHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Device Experience", "Mean Completion Time (ms)", "Mean Click Error (%)", "Mean Throughput (bps)"];
-let PASDataHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Device Experience", "Amplitude", "Width", "Number of Targets", "Task Index", "Click Number", "Completion Time (ms)", "Square X", "Square Y", "Click X", "Click Y", "Distance to Square Center", "Incorrect"];
+let clickDataHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Amplitude", "Width", "Number of Targets", "Task Index", "Click Number", "Completion Time (ms)", "Source X", "Source Y", "Target X", "Target Y", "Click X", "Click Y", "Source-Target Distance", "dx", "Incorrect"];
+let aggregateTaskResultHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Amplitude", "Width", "Number of Targets", "Task Index", "Mean Completion Time (ms)", "Error (%)", "SDx", "We", "IDe", "Ae", "Throughput (bps)"];
+let overallMeanResultHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Mean Completion Time (ms)", "Mean Click Error (%)", "Mean Throughput (bps)"];
+let PASDataHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Amplitude", "Width", "Number of Targets", "Task Index", "Click Number", "Completion Time (ms)", "Square X", "Square Y", "Click X", "Click Y", "Distance to Square Center", "Incorrect"];
 
 $(document).ready(function() {
     $("#main_menu").hide();
@@ -187,7 +186,6 @@ $(document).ready(function() {
     if (getCookie("webfitt-condition-code") != "") $("#condition-code").val(getCookie("webfitt-condition-code"));
     if (getCookie("webfitt-eye-dominance") != "") $("input[name='eye-dominance'][value='" + getCookie("webfitt-eye-dominance") + "']").prop("checked", true);
     if (getCookie("webfitt-pointing-device") != "") $("input[name='pointing-device'][value='" + getCookie("webfitt-pointing-device") + "']").prop("checked", true);
-    if (getCookie("webfitt-device-experience") != "") $("input[name='device-experience'][value='" + getCookie("webfitt-device-experience") + "']").prop("checked", true);
     if (getCookie("webfitt-amplitude") != "") $("#amplitude").val(getCookie("webfitt-amplitude"));
     if (getCookie("webfitt-width") != "") $("#width").val(getCookie("webfitt-width"));
     if (getCookie("webfitt-number-of-targets") != "") $("#number-of-targets").val(getCookie("webfitt-number-of-targets"));
@@ -202,7 +200,6 @@ $(document).ready(function() {
 
         eyeDominance = $("input[name='eye-dominance']:checked").val();
         pointingDevice = $("input[name='pointing-device']:checked").val();
-        deviceExperience = $("input[name='device-experience']:checked").val();
         var A_raw = $("#amplitude").val();
         var W_raw = $("#width").val();
         var n = parseInt($("#number-of-targets").val());
@@ -214,7 +211,6 @@ $(document).ready(function() {
         setCookie("webfitt-condition-code", conditionCode, 3650);
         setCookie("webfitt-eye-dominance", eyeDominance, 3650);
         setCookie("webfitt-pointing-device", pointingDevice, 3650);
-        setCookie("webfitt-device-experience", deviceExperience, 3650);
         setCookie("webfitt-amplitude", A_raw, 3650);
         setCookie("webfitt-width", W_raw, 3650);
         setCookie("webfitt-number-of-targets", n, 3650);
@@ -743,7 +739,6 @@ function computeClickData(clickPos) {
     data.push(testType);
     data.push(eyeDominance);
     data.push(pointingDevice);
-    data.push(deviceExperience);
     data.push(A);
     data.push(W);
     data.push(n);
@@ -794,7 +789,6 @@ function computeAggregateTaskResult() {
         aggRes.push(testType);
         aggRes.push(eyeDominance);
         aggRes.push(pointingDevice);
-        aggRes.push(deviceExperience);
         aggRes.push(A);
         aggRes.push(W);
         aggRes.push(n);
@@ -832,7 +826,6 @@ function computeOverallMeanResult() {
     ovRes.push(testType);
     ovRes.push(eyeDominance);
     ovRes.push(pointingDevice);
-    ovRes.push(deviceExperience);
     ovRes.push(overallMeanTime);
     ovRes.push(overallMeanError);
     ovRes.push(overallMeanThroughput);
@@ -1403,7 +1396,6 @@ function onPASClick() {
     data.push(testType);
     data.push(eyeDominance);
     data.push(pointingDevice);
-    data.push(deviceExperience);
     data.push(pasTasks[taskIdx].amplitude);
     data.push(pasTasks[taskIdx].width);
     data.push(pasTasks[taskIdx].numSquares);
