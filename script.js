@@ -56,7 +56,7 @@ var resultsview = true;
 let clickDataHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Amplitude", "Width", "Number of Targets", "Task Index", "Click Number", "Completion Time (ms)", "Source X", "Source Y", "Target X", "Target Y", "Click X", "Click Y", "Source-Target Distance", "dx", "Incorrect"];
 let aggregateTaskResultHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Amplitude", "Width", "Number of Targets", "Task Index", "Mean Completion Time (ms)", "Error (%)", "SDx", "We", "IDe", "Ae", "Throughput (bps)"];
 let overallMeanResultHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Mean Completion Time (ms)", "Mean Click Error (%)", "Mean Throughput (bps)"];
-let PASDataHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Amplitude", "Width", "Number of Targets", "Task Index", "Click Number", "Completion Time (ms)", "Square X", "Square Y", "Click X", "Click Y", "Distance to Square Center", "Incorrect"];
+let PASDataHeader = ["Participant Code", "Session Code", "Condition Code", "Test Type", "Eye Dominance", "Pointing Device", "Amplitude", "Width", "Number of Targets", "Task Index", "Click Number", "Completion Time (ms)", "Square X", "Square Y", "Click X", "Click Y", "Incorrect"];
 
 $(document).ready(function() {
     $("#main_menu").hide();
@@ -113,12 +113,12 @@ $(document).ready(function() {
     //     }
     // });
 
-    $(document).on("keydown", function(event) {
-        if (isTaskRunning && event.code === "Space") {
-            event.preventDefault(); // Prevent default spacebar behavior
-            onCanvasClick();
-        }
-    });
+    // $(document).on("keydown", function(event) {
+    //     if (isTaskRunning && event.code === "Space") {
+    //         event.preventDefault(); // Prevent default spacebar behavior
+    //         onCanvasClick();
+    //     }
+    // });
 
     // Register mouse click on UI elements
     $(document).on("click", ".ui_item", function() {
